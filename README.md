@@ -54,7 +54,7 @@ Before you begin, ensure you have installed:
 
 ### 🔹 Clone the repository
  bash
-git clone https://https://github.com/sanjayeshwaran05-dot/MedicoreX-Hospital_Management_System.git
+git clone https://https:github.com/sanjayeshwaran05-dot/MedicoreX-Hospital_Management_System
 
 ### Backend Setup
 cd backend
