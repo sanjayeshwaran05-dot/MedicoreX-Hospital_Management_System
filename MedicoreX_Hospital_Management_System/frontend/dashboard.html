@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MediCoreX Hospital Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <img src="images/hospital-logo.png" alt="Hospital Logo" onerror="this.style.display='none'">
+                <h1>MediCoreX Hospital</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="dashboard.html">Dashboard</a></li>
+                    <li><a href="patients.html">Patients</a></li>
+                    <li><a href="doctors.html">Doctors</a></li>
+                    <li><a href="appointments.html">Appointments</a></li>
+                    <li><a href="billing.html">Billing</a></li>
+                    <li><a href="reports.html">Reports</a></li>
+                    <li><a href="index.html" id="logoutBtn">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2>Welcome, <span id="userName">Admin</span>!</h2>
+            </div>
+            <p>Here's an overview of hospital operations</p>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3 id="totalPatients">0</h3>
+                <p>Total Patients</p>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--success-color);">
+                <h3 id="totalDoctors">0</h3>
+                <p>Total Doctors</p>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--warning-color);">
+                <h3 id="totalAppointments">0</h3>
+                <p>Appointments Today</p>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--danger-color);">
+                <h3 id="totalRevenue">\u20b90</h3>
+                <p>Revenue This Month</p>
+            </div>
+        </div>
+
+        <div class="stats-container">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Recent Appointments</h2>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Patient Name</th>
+                                <th>Doctor</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentAppointmentsTable">
+                            <tr>
+                                <td colspan="4">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Quick Actions</h2>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <a href="patients.html" class="btn btn-primary">Add New Patient</a>
+                    <a href="appointments.html" class="btn btn-success">Book Appointment</a>
+                    <a href="billing.html" class="btn btn-warning">Generate Bill</a>
+                    <a href="reports.html" class="btn btn-danger">View Reports</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 AngalaEswari Hospital Management System. All rights reserved.</p>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        // Check if user is logged in
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('userName').textContent = currentUser.username;
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        });
+
+        // Load dashboard statistics
+        function loadDashboardStats() {
+            // Get data from localStorage or set defaults
+            const patients = JSON.parse(localStorage.getItem('patients')) || [];
+            const doctors = JSON.parse(localStorage.getItem('doctors')) || [];
+            const appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+            const bills = JSON.parse(localStorage.getItem('bills')) || [];
+
+            // Update statistics
+            document.getElementById('totalPatients').textContent = patients.length;
+            document.getElementById('totalDoctors').textContent = doctors.length;
+            document.getElementById('totalAppointments').textContent = appointments.filter(apt => 
+                new Date(apt.date).toDateString() === new Date().toDateString()
+            ).length;
+
+            // Calculate total revenue this month
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            const monthlyRevenue = bills
+                .filter(bill => {
+                    const billDate = new Date(bill.date);
+                    return billDate.getMonth() === currentMonth && billDate.getFullYear() === currentYear;
+                })
+                .reduce((total, bill) => total + parseFloat(bill.amount), 0);
+            
+            document.getElementById('totalRevenue').textContent = '\u20b9' + monthlyRevenue.toLocaleString();
+
+            // Load recent appointments
+            const recentAppointments = appointments.slice(-5).reverse();
+            const tableBody = document.getElementById('recentAppointmentsTable');
+            
+            if (recentAppointments.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4">No recent appointments</td></tr>';
+            } else {
+                tableBody.innerHTML = recentAppointments.map(apt => {
+                    const patient = patients.find(p => p.id === apt.patientId);
+                    const doctor = doctors.find(d => d.id === apt.doctorId);
+                    const statusClass = apt.status === 'confirmed' ? 'badge-success' : 
+                                        apt.status === 'pending' ? 'badge-warning' : 'badge-danger';
+                    
+                    return `
+                        <tr>
+                            <td>${patient ? patient.name : 'Unknown'}</td>
+                            <td>${doctor ? doctor.name : 'Unknown'}</td>
+                            <td>${new Date(apt.date).toLocaleDateString()}</td>
+                            <td><span class="badge ${statusClass}">${apt.status}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Initialize dashboard
+        loadDashboardStats();
+    </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MediCoreX Hospital Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="login-container">
+    <div class="login-card">
+        <div class="logo" style="justify-content: center; margin-bottom: 20px;">
+            <img src="images/hospital-logo.png" alt="Hospital Logo" onerror="this.style.display='none'" style="height: 60px;">
+        </div>
+        <h2>Admin Login</h2>
+        
+        <div id="alert-container"></div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" class="form-control" placeholder="Enter username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" class="form-control" placeholder="Enter password" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="userType">User Type</label>
+                <select id="userType" class="form-control" required>
+                    <option value="">Select User Type</option>
+                    <option value="admin">Administrator</option>
+                    <option value="doctor">Doctor</option>
+                    <option value="receptionist">Receptionist</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+        </form>
+        
+        <p style="text-align: center; margin-top: 20px; color: #666;">
+            <a href="index.html" style="color: var(--primary-color);">Back to Home</a>
+        </p>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const userType = document.getElementById('userType').value;
+            
+            // Demo login - in production, this would connect to backend
+            if (username && password && userType) {
+                // Store user info in localStorage
+                localStorage.setItem('currentUser', JSON.stringify({
+                    username: username,
+                    userType: userType
+                }));
+                
+                // Show success message
+                showAlert('Login successful! Redirecting to dashboard...', 'success');
+                
+                // Redirect to dashboard after 1.5 seconds
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1500);
+            } else {
+                showAlert('Please fill in all fields.', 'danger');
+            }
+        });
+
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alertContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,403 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctors Management - MediCoreX Hospital Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <img src="images/hospital-logo.png" alt="Hospital Logo" onerror="this.style.display='none'">
+                <h1>MediCoreX Hospital</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="dashboard.html">Dashboard</a></li>
+                    <li><a href="patients.html">Patients</a></li>
+                    <li><a href="doctors.html">Doctors</a></li>
+                    <li><a href="appointments.html">Appointments</a></li>
+                    <li><a href="billing.html">Billing</a></li>
+                    <li><a href="reports.html">Reports</a></li>
+                    <li><a href="index.html" id="logoutBtn">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2>Doctor Management</h2>
+            </div>
+
+            <div id="alert-container"></div>
+
+            <div class="search-box">
+                <input type="text" id="searchDoctor" class="form-control" placeholder="Search doctors by name, ID, or specialization...">
+                <button class="btn btn-primary" onclick="searchDoctors()">Search</button>
+                <button class="btn btn-success" onclick="showAddDoctorModal()">Add New Doctor</button>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Doctor ID</th>
+                            <th>Name</th>
+                            <th>Specialization</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Experience</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doctorsTableBody">
+                        <tr>
+                            <td colspan="8">Loading doctors...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Doctor Modal -->
+    <div id="doctorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Doctor</h2>
+                <span class="close" onclick="closeDoctorModal()">&times;</span>
+            </div>
+            <form id="doctorForm">
+                <input type="hidden" id="doctorId">
+                
+                <div class="form-group">
+                    <label for="doctorName">Full Name *</label>
+                    <input type="text" id="doctorName" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="doctorSpecialization">Specialization *</label>
+                    <select id="doctorSpecialization" class="form-control" required>
+                        <option value="">Select Specialization</option>
+                        <option value="General Medicine">General Medicine</option>
+                        <option value="Cardiology">Cardiology</option>
+                        <option value="Neurology">Neurology</option>
+                        <option value="Orthopedics">Orthopedics</option>
+                        <option value="Pediatrics">Pediatrics</option>
+                        <option value="Dermatology">Dermatology</option>
+                        <option value="Gynecology">Gynecology</option>
+                        <option value="Ophthalmology">Ophthalmology</option>
+                        <option value="Psychiatry">Psychiatry</option>
+                        <option value="Surgery">Surgery</option>
+                        <option value="Dentistry">Dentistry</option>
+                        <option value="Radiology">Radiology</option>
+                    </select>
+                </div>
+
+                <div class="stats-container">
+                    <div class="form-group">
+                        <label for="doctorPhone">Phone Number *</label>
+                        <input type="tel" id="doctorPhone" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="doctorEmail">Email *</label>
+                        <input type="email" id="doctorEmail" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="stats-container">
+                    <div class="form-group">
+                        <label for="doctorExperience">Experience (Years) *</label>
+                        <input type="number" id="doctorExperience" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="doctorQualification">Qualification *</label>
+                        <input type="text" id="doctorQualification" class="form-control" required placeholder="e.g., MBBS, MD">
+                    </div>
+                </div>
+
+                <div class="stats-container">
+                    <div class="form-group">
+                        <label for="doctorConsultationFee">Consultation Fee (\u20b9) *</label>
+                        <input type="number" id="doctorConsultationFee" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="doctorStatus">Status *</label>
+                        <select id="doctorStatus" class="form-control" required>
+                            <option value="Active">Active</option>
+                            <option value="On Leave">On Leave</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="doctorAddress">Address</label>
+                    <input type="text" id="doctorAddress" class="form-control">
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary">Save Doctor</button>
+                    <button type="button" class="btn btn-danger" onclick="closeDoctorModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Doctor Details Modal -->
+    <div id="viewDoctorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Doctor Details</h2>
+                <span class="close" onclick="closeViewDoctorModal()">&times;</span>
+            </div>
+            <div id="doctorDetails"></div>
+            <button class="btn btn-primary" onclick="closeViewDoctorModal()">Close</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 MediCoreX Hospital Management System. All rights reserved.</p>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        let doctors = JSON.parse(localStorage.getItem('doctors')) || [];
+
+        // Check if user is logged in
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        });
+
+        // Load doctors on page load
+        window.addEventListener('DOMContentLoaded', loadDoctors);
+
+        // Load all doctors
+        function loadDoctors() {
+            const tableBody = document.getElementById('doctorsTableBody');
+            
+            if (doctors.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="8">No doctors found. Click "Add New Doctor" to add one.</td></tr>';
+                return;
+            }
+
+            tableBody.innerHTML = doctors.map(doctor => {
+                const statusClass = doctor.status === 'Active' ? 'badge-success' : 
+                                   doctor.status === 'On Leave' ? 'badge-warning' : 'badge-danger';
+                
+                return `
+                    <tr>
+                        <td><strong>${doctor.id}</strong></td>
+                        <td>${doctor.name}</td>
+                        <td>${doctor.specialization}</td>
+                        <td>${doctor.phone}</td>
+                        <td>${doctor.email}</td>
+                        <td>${doctor.experience} years</td>
+                        <td><span class="badge ${statusClass}">${doctor.status}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-primary btn-sm" onclick="viewDoctor('${doctor.id}')">View</button>
+                                <button class="btn btn-warning btn-sm" onclick="editDoctor('${doctor.id}')">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteDoctor('${doctor.id}')">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Search doctors
+        function searchDoctors() {
+            const searchTerm = document.getElementById('searchDoctor').value.toLowerCase();
+            const tableBody = document.getElementById('doctorsTableBody');
+            
+            const filteredDoctors = doctors.filter(doctor => 
+                doctor.name.toLowerCase().includes(searchTerm) ||
+                doctor.id.toLowerCase().includes(searchTerm) ||
+                doctor.specialization.toLowerCase().includes(searchTerm)
+            );
+
+            if (filteredDoctors.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="8">No doctors found matching your search.</td></tr>';
+                return;
+            }
+
+            tableBody.innerHTML = filteredDoctors.map(doctor => {
+                const statusClass = doctor.status === 'Active' ? 'badge-success' : 
+                                   doctor.status === 'On Leave' ? 'badge-warning' : 'badge-danger';
+                
+                return `
+                    <tr>
+                        <td><strong>${doctor.id}</strong></td>
+                        <td>${doctor.name}</td>
+                        <td>${doctor.specialization}</td>
+                        <td>${doctor.phone}</td>
+                        <td>${doctor.email}</td>
+                        <td>${doctor.experience} years</td>
+                        <td><span class="badge ${statusClass}">${doctor.status}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-primary btn-sm" onclick="viewDoctor('${doctor.id}')">View</button>
+                                <button class="btn btn-warning btn-sm" onclick="editDoctor('${doctor.id}')">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteDoctor('${doctor.id}')">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Show add doctor modal
+        function showAddDoctorModal() {
+            document.getElementById('modalTitle').textContent = 'Add New Doctor';
+            document.getElementById('doctorForm').reset();
+            document.getElementById('doctorId').value = '';
+            document.getElementById('doctorModal').style.display = 'block';
+        }
+
+        // Edit doctor
+        function editDoctor(id) {
+            const doctor = doctors.find(d => d.id === id);
+            if (!doctor) return;
+
+            document.getElementById('modalTitle').textContent = 'Edit Doctor';
+            document.getElementById('doctorId').value = doctor.id;
+            document.getElementById('doctorName').value = doctor.name;
+            document.getElementById('doctorSpecialization').value = doctor.specialization;
+            document.getElementById('doctorPhone').value = doctor.phone;
+            document.getElementById('doctorEmail').value = doctor.email;
+            document.getElementById('doctorExperience').value = doctor.experience;
+            document.getElementById('doctorQualification').value = doctor.qualification;
+            document.getElementById('doctorConsultationFee').value = doctor.consultationFee;
+            document.getElementById('doctorStatus').value = doctor.status;
+            document.getElementById('doctorAddress').value = doctor.address || '';
+            
+            document.getElementById('doctorModal').style.display = 'block';
+        }
+
+        // View doctor details
+        function viewDoctor(id) {
+            const doctor = doctors.find(d => d.id === id);
+            if (!doctor) return;
+
+            const statusClass = doctor.status === 'Active' ? 'badge-success' : 
+                               doctor.status === 'On Leave' ? 'badge-warning' : 'badge-danger';
+
+            const detailsHtml = `
+                <div class="stats-container">
+                    <div><strong>Name:</strong> ${doctor.name}</div>
+                    <div><strong>ID:</strong> ${doctor.id}</div>
+                </div>
+                <div class="stats-container">
+                    <div><strong>Specialization:</strong> ${doctor.specialization}</div>
+                    <div><strong>Qualification:</strong> ${doctor.qualification}</div>
+                </div>
+                <div class="stats-container">
+                    <div><strong>Experience:</strong> ${doctor.experience} years</div>
+                    <div><strong>Status:</strong> <span class="badge ${statusClass}">${doctor.status}</span></div>
+                </div>
+                <div class="stats-container">
+                    <div><strong>Phone:</strong> ${doctor.phone}</div>
+                    <div><strong>Email:</strong> ${doctor.email}</div>
+                </div>
+                <div class="stats-container">
+                    <div><strong>Consultation Fee:</strong> \u20b9${doctor.consultationFee}</div>
+                    <div><strong>Address:</strong> ${doctor.address || 'N/A'}</div>
+                </div>
+            `;
+
+            document.getElementById('doctorDetails').innerHTML = detailsHtml;
+            document.getElementById('viewDoctorModal').style.display = 'block';
+        }
+
+        // Delete doctor
+        function deleteDoctor(id) {
+            if (confirm('Are you sure you want to delete this doctor?')) {
+                doctors = doctors.filter(d => d.id !== id);
+                localStorage.setItem('doctors', JSON.stringify(doctors));
+                loadDoctors();
+                showAlert('Doctor deleted successfully!', 'success');
+            }
+        }
+
+        // Close modals
+        function closeDoctorModal() {
+            document.getElementById('doctorModal').style.display = 'none';
+        }
+
+        function closeViewDoctorModal() {
+            document.getElementById('viewDoctorModal').style.display = 'none';
+        }
+
+        // Handle form submission
+        document.getElementById('doctorForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const doctorId = document.getElementById('doctorId').value;
+            const doctorData = {
+                id: doctorId || 'D' + Date.now(),
+                name: document.getElementById('doctorName').value,
+                specialization: document.getElementById('doctorSpecialization').value,
+                phone: document.getElementById('doctorPhone').value,
+                email: document.getElementById('doctorEmail').value,
+                experience: document.getElementById('doctorExperience').value,
+                qualification: document.getElementById('doctorQualification').value,
+                consultationFee: document.getElementById('doctorConsultationFee').value,
+                status: document.getElementById('doctorStatus').value,
+                address: document.getElementById('doctorAddress').value,
+                createdAt: doctorId ? doctors.find(d => d.id === doctorId)?.createdAt : new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            if (doctorId) {
+                // Update existing doctor
+                const index = doctors.findIndex(d => d.id === doctorId);
+                doctors[index] = doctorData;
+                showAlert('Doctor updated successfully!', 'success');
+            } else {
+                // Add new doctor
+                doctors.push(doctorData);
+                showAlert('Doctor added successfully!', 'success');
+            }
+
+            localStorage.setItem('doctors', JSON.stringify(doctors));
+            closeDoctorModal();
+            loadDoctors();
+        });
+
+        // Show alert message
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alertContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

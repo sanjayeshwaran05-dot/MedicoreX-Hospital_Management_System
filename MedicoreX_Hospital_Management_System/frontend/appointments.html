@@ -1,0 +1,486 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointments - AngalaEswari Hospital Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <img src="images/hospital-logo.png" alt="Hospital Logo" onerror="this.style.display='none'">
+                <h1>AngalaEswari Hospital</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="dashboard.html">Dashboard</a></li>
+                    <li><a href="patients.html">Patients</a></li>
+                    <li><a href="doctors.html">Doctors</a></li>
+                    <li><a href="appointments.html">Appointments</a></li>
+                    <li><a href="billing.html">Billing</a></li>
+                    <li><a href="reports.html">Reports</a></li>
+                    <li><a href="index.html" id="logoutBtn">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2>Appointment Management</h2>
+            </div>
+
+            <div id="alert-container"></div>
+
+            <div class="search-box">
+                <input type="text" id="searchAppointment" class="form-control" placeholder="Search appointments by patient or doctor name...">
+                <button class="btn btn-primary" onclick="searchAppointments()">Search</button>
+                <button class="btn btn-success" onclick="showAddAppointmentModal()">Book Appointment</button>
+            </div>
+
+            <div class="stats-container" style="margin-bottom: 20px;">
+                <select id="filterStatus" class="form-control" onchange="filterAppointments()">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+                <input type="date" id="filterDate" class="form-control" onchange="filterAppointments()">
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Appointment ID</th>
+                            <th>Patient</th>
+                            <th>Doctor</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appointmentsTableBody">
+                        <tr>
+                            <td colspan="7">Loading appointments...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Appointment Modal -->
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Book New Appointment</h2>
+                <span class="close" onclick="closeAppointmentModal()">&amp;times;</span>
+            </div>
+            <form id="appointmentForm">
+                <input type="hidden" id="appointmentId">
+                
+                <div class="form-group">
+                    <label for="selectPatient">Select Patient *</label>
+                    <select id="selectPatient" class="form-control" required>
+                        <option value="">Select Patient</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="selectDoctor">Select Doctor *</label>
+                    <select id="selectDoctor" class="form-control" required onchange="loadDoctorDetails()">
+                        <option value="">Select Doctor</option>
+                    </select>
+                </div>
+
+                <div class="stats-container">
+                    <div class="form-group">
+                        <label for="appointmentDate">Date *</label>
+                        <input type="date" id="appointmentDate" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="appointmentTime">Time *</label>
+                        <select id="appointmentTime" class="form-control" required>
+                            <option value="">Select Time</option>
+                            <option value="09:00">09:00 AM</option>
+                            <option value="09:30">09:30 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="10:30">10:30 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="11:30">11:30 AM</option>
+                            <option value="14:00">02:00 PM</option>
+                            <option value="14:30">02:30 PM</option>
+                            <option value="15:00">03:00 PM</option>
+                            <option value="15:30">03:30 PM</option>
+                            <option value="16:00">04:00 PM</option>
+                            <option value="16:30">04:30 PM</option>
+                            <option value="17:00">05:00 PM</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="doctorInfo" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                    <strong>Consultation Fee:</strong> <span id="consultationFeeDisplay">\u20b90</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="appointmentReason">Reason for Visit *</label>
+                    <textarea id="appointmentReason" class="form-control" rows="3" required placeholder="Describe the reason for appointment"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="appointmentStatus">Status</label>
+                    <select id="appointmentStatus" class="form-control">
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary">Save Appointment</button>
+                    <button type="button" class="btn btn-danger" onclick="closeAppointmentModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Appointment Details Modal -->
+    <div id="viewAppointmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Appointment Details</h2>
+                <span class="close" onclick="closeViewAppointmentModal()">&amp;times;</span>
+            </div>
+            <div id="appointmentDetails"></div>
+            <button class="btn btn-primary" onclick="closeViewAppointmentModal()">Close</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&amp;copy; 2024 AngalaEswari Hospital Management System. All rights reserved.</p>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        let appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+        let patients = JSON.parse(localStorage.getItem('patients')) || [];
+        let doctors = JSON.parse(localStorage.getItem('doctors')) || [];
+
+        // Check if user is logged in
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+        if (!currentUser) {
+            window.location.href = 'login.html';
+        }
+
+        // Logout functionality
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        });
+
+        // Load appointments on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadAppointments();
+            populatePatientDropdown();
+            populateDoctorDropdown();
+        });
+
+        // Load all appointments
+        function loadAppointments() {
+            const tableBody = document.getElementById('appointmentsTableBody');
+            
+            if (appointments.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7">No appointments found. Click "Book Appointment" to book one.</td></tr>';
+                return;
+            }
+
+            const sortedAppointments = [...appointments].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            tableBody.innerHTML = sortedAppointments.map(apt => {
+                const patient = patients.find(p => p.id === apt.patientId);
+                const doctor = doctors.find(d => d.id === apt.doctorId);
+                const statusClass = apt.status === 'confirmed' ? 'badge-success' : 
+                                   apt.status === 'completed' ? 'badge-info' : 
+                                   apt.status === 'pending' ? 'badge-warning' : 'badge-danger';
+                
+                return `
+                    <tr>
+                        <td><strong>${apt.id}</strong></td>
+                        <td>${patient ? patient.name : 'Unknown'}</td>
+                        <td>${doctor ? doctor.name : 'Unknown'}</td>
+                        <td>${new Date(apt.date).toLocaleDateString()}</td>
+                        <td>${formatTime(apt.time)}</td>
+                        <td><span class="badge ${statusClass}">${apt.status}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-primary btn-sm" onclick="viewAppointment('${apt.id}')">View</button>
+                                <button class="btn btn-warning btn-sm" onclick="editAppointment('${apt.id}')">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteAppointment('${apt.id}')">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function formatTime(time) {
+            const [hours, minutes] = time.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const formattedHour = hour % 12 || 12;
+            return `${formattedHour}:${minutes} ${ampm}`;
+        }
+
+        function populatePatientDropdown() {
+            const patientSelect = document.getElementById('selectPatient');
+            patientSelect.innerHTML = '<option value="">Select Patient</option>';
+            patients.forEach(patient => {
+                patientSelect.innerHTML += `<option value="${patient.id}">${patient.name} (ID: ${patient.id})</option>`;
+            });
+        }
+
+        function populateDoctorDropdown() {
+            const doctorSelect = document.getElementById('selectDoctor');
+            doctorSelect.innerHTML = '<option value="">Select Doctor</option>';
+            doctors.filter(d => d.status === 'Active').forEach(doctor => {
+                doctorSelect.innerHTML += `<option value="${doctor.id}">${doctor.name} - ${doctor.specialization}</option>`;
+            });
+        }
+
+        function loadDoctorDetails() {
+            const doctorId = document.getElementById('selectDoctor').value;
+            const doctor = doctors.find(d => d.id === doctorId);
+            if (doctor) {
+                document.getElementById('consultationFeeDisplay').textContent = '\u20b9' + doctor.consultationFee;
+                document.getElementById('doctorInfo').style.display = 'block';
+            } else {
+                document.getElementById('doctorInfo').style.display = 'none';
+            }
+        }
+
+        function searchAppointments() {
+            const searchTerm = document.getElementById('searchAppointment').value.toLowerCase();
+            const tableBody = document.getElementById('appointmentsTableBody');
+            const filteredAppointments = appointments.filter(apt => {
+                const patient = patients.find(p => p.id === apt.patientId);
+                const doctor = doctors.find(d => d.id === apt.doctorId);
+                const patientName = patient ? patient.name.toLowerCase() : '';
+                const doctorName = doctor ? doctor.name.toLowerCase() : '';
+                return patientName.includes(searchTerm) || doctorName.includes(searchTerm);
+            });
+
+            if (filteredAppointments.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7">No appointments found matching your search.</td></tr>';
+                return;
+            }
+
+            const sortedAppointments = filteredAppointments.sort((a, b) => new Date(b.date) - new Date(a.date));
+            tableBody.innerHTML = sortedAppointments.map(apt => {
+                const patient = patients.find(p => p.id === apt.patientId);
+                const doctor = doctors.find(d => d.id === apt.doctorId);
+                const statusClass = apt.status === 'confirmed' ? 'badge-success' : 
+                                   apt.status === 'completed' ? 'badge-info' : 
+                                   apt.status === 'pending' ? 'badge-warning' : 'badge-danger';
+                return `
+                    <tr>
+                        <td><strong>${apt.id}</strong></td>
+                        <td>${patient ? patient.name : 'Unknown'}</td>
+                        <td>${doctor ? doctor.name : 'Unknown'}</td>
+                        <td>${new Date(apt.date).toLocaleDateString()}</td>
+                        <td>${formatTime(apt.time)}</td>
+                        <td><span class="badge ${statusClass}">${apt.status}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-primary btn-sm" onclick="viewAppointment('${apt.id}')">View</button>
+                                <button class="btn btn-warning btn-sm" onclick="editAppointment('${apt.id}')">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteAppointment('${apt.id}')">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterAppointments() {
+            const statusFilter = document.getElementById('filterStatus').value;
+            const dateFilter = document.getElementById('filterDate').value;
+            const tableBody = document.getElementById('appointmentsTableBody');
+            let filteredAppointments = appointments;
+
+            if (statusFilter) {
+                filteredAppointments = filteredAppointments.filter(apt => apt.status === statusFilter);
+            }
+            if (dateFilter) {
+                filteredAppointments = filteredAppointments.filter(apt => apt.date === dateFilter);
+            }
+
+            if (filteredAppointments.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7">No appointments found matching your filters.</td></tr>';
+                return;
+            }
+
+            const sortedAppointments = filteredAppointments.sort((a, b) => new Date(b.date) - new Date(a.date));
+            tableBody.innerHTML = sortedAppointments.map(apt => {
+                const patient = patients.find(p => p.id === apt.patientId);
+                const doctor = doctors.find(d => d.id === apt.doctorId);
+                const statusClass = apt.status === 'confirmed' ? 'badge-success' : 
+                                   apt.status === 'completed' ? 'badge-info' : 
+                                   apt.status === 'pending' ? 'badge-warning' : 'badge-danger';
+                return `
+                    <tr>
+                        <td><strong>${apt.id}</strong></td>
+                        <td>${patient ? patient.name : 'Unknown'}</td>
+                        <td>${doctor ? doctor.name : 'Unknown'}</td>
+                        <td>${new Date(apt.date).toLocaleDateString()}</td>
+                        <td>${formatTime(apt.time)}</td>
+                        <td><span class="badge ${statusClass}">${apt.status}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-primary btn-sm" onclick="viewAppointment('${apt.id}')">View</button>
+                                <button class="btn btn-warning btn-sm" onclick="editAppointment('${apt.id}')">Edit</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteAppointment('${apt.id}')">Cancel</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function showAddAppointmentModal() {
+            if (patients.length === 0) {
+                showAlert('No patients found. Please add a patient first.', 'warning');
+                return;
+            }
+            if (doctors.filter(d => d.status === 'Active').length === 0) {
+                showAlert('No active doctors found. Please add or activate a doctor first.', 'warning');
+                return;
+            }
+            document.getElementById('modalTitle').textContent = 'Book New Appointment';
+            document.getElementById('appointmentForm').reset();
+            document.getElementById('appointmentId').value = '';
+            document.getElementById('appointmentStatus').value = 'pending';
+            document.getElementById('doctorInfo').style.display = 'none';
+            document.getElementById('appointmentModal').style.display = 'block';
+        }
+
+        function editAppointment(id) {
+            const appointment = appointments.find(a => a.id === id);
+            if (!appointment) return;
+            document.getElementById('modalTitle').textContent = 'Edit Appointment';
+            document.getElementById('appointmentId').value = appointment.id;
+            document.getElementById('selectPatient').value = appointment.patientId;
+            document.getElementById('selectDoctor').value = appointment.doctorId;
+            document.getElementById('appointmentDate').value = appointment.date;
+            document.getElementById('appointmentTime').value = appointment.time;
+            document.getElementById('appointmentReason').value = appointment.reason;
+            document.getElementById('appointmentStatus').value = appointment.status;
+            loadDoctorDetails();
+            document.getElementById('appointmentModal').style.display = 'block';
+        }
+
+        function viewAppointment(id) {
+            const appointment = appointments.find(a => a.id === id);
+            if (!appointment) return;
+            const patient = patients.find(p => p.id === appointment.patientId);
+            const doctor = doctors.find(d => d.id === appointment.doctorId);
+            const statusClass = appointment.status === 'confirmed' ? 'badge-success' : 
+                               appointment.status === 'completed' ? 'badge-info' : 
+                               appointment.status === 'pending' ? 'badge-warning' : 'badge-danger';
+            const detailsHtml = `
+                <div class="stats-container">
+                    <div><strong>Appointment ID:</strong> ${appointment.id}</div>
+                    <div><strong>Status:</strong> <span class="badge ${statusClass}">${appointment.status}</span></div>
+                </div>
+                <div class="stats-container">
+                    <div><strong>Patient:</strong> ${patient ? patient.name : 'Unknown'}</div>
+                    <div><strong>Doctor:</strong> ${doctor ? doctor.name : 'Unknown'}</div>
+                </div>
+                <div class="stats-container">
+                    <div><strong>Date:</strong> ${new Date(appointment.date).toLocaleDateString()}</div>
+                    <div><strong>Time:</strong> ${formatTime(appointment.time)}</div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <strong>Reason for Visit:</strong>
+                    <p>${appointment.reason}</p>
+                </div>
+            `;
+            document.getElementById('appointmentDetails').innerHTML = detailsHtml;
+            document.getElementById('viewAppointmentModal').style.display = 'block';
+        }
+
+        function deleteAppointment(id) {
+            if (confirm('Are you sure you want to cancel this appointment?')) {
+                const index = appointments.findIndex(a => a.id === id);
+                appointments[index].status = 'cancelled';
+                localStorage.setItem('appointments', JSON.stringify(appointments));
+                loadAppointments();
+                showAlert('Appointment cancelled successfully!', 'success');
+            }
+        }
+
+        function closeAppointmentModal() {
+            document.getElementById('appointmentModal').style.display = 'none';
+        }
+
+        function closeViewAppointmentModal() {
+            document.getElementById('viewAppointmentModal').style.display = 'none';
+        }
+
+        document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const appointmentId = document.getElementById('appointmentId').value;
+            const appointmentData = {
+                id: appointmentId || 'A' + Date.now(),
+                patientId: document.getElementById('selectPatient').value,
+                doctorId: document.getElementById('selectDoctor').value,
+                date: document.getElementById('appointmentDate').value,
+                time: document.getElementById('appointmentTime').value,
+                reason: document.getElementById('appointmentReason').value,
+                status: document.getElementById('appointmentStatus').value,
+                createdAt: appointmentId ? appointments.find(a => a.id === appointmentId)?.createdAt : new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            if (appointmentId) {
+                const index = appointments.findIndex(a => a.id === appointmentId);
+                appointments[index] = appointmentData;
+                showAlert('Appointment updated successfully!', 'success');
+            } else {
+                appointments.push(appointmentData);
+                showAlert('Appointment booked successfully!', 'success');
+            }
+
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+            closeAppointmentModal();
+            loadAppointments();
+        });
+
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alertContainer.appendChild(alert);
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
