@@ -78,7 +78,7 @@ cd frontend
 
 Open your browser
 
-Navigate to http://localhost:5000 (or your backend URL)
+Navigate to http://localhost:8000 (or your backend URL)
 
 Register / Login as Admin
 
